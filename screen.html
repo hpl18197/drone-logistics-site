@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>蜂翼智飞 · 无人机物流指挥大屏</title>
+  <link rel="stylesheet" href="screen.css">
+</head>
+<body>
+  <header class="screen-header">
+    <div class="screen-brand">
+      <span class="screen-brand-mark"><i data-lucide="radar" aria-hidden="true"></i></span>
+      <div>
+        <div class="screen-title">无人机物流指挥大屏</div>
+        <div class="screen-sub">蜂翼智飞 · 实时运行态势</div>
+      </div>
+    </div>
+    <div class="screen-header-actions">
+      <span class="screen-pill" id="ws-status"><i data-lucide="radio" aria-hidden="true"></i>WebSocket 已连接</span>
+      <span class="screen-pill" id="webrtc-status"><i data-lucide="video" aria-hidden="true"></i>WebRTC 0.2s</span>
+      <button class="screen-btn" data-map-config-open>
+        <i data-lucide="map" aria-hidden="true"></i>地图配置
+      </button>
+      <button class="screen-btn" id="fullscreen-btn">
+        <i data-lucide="maximize" aria-hidden="true"></i>全屏
+      </button>
+      <span class="screen-clock" id="screen-clock">--:--:--</span>
+    </div>
+  </header>
+
+  <main class="screen-main">
+    <section class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">今日总订单量</div>
+        <div class="metric-value" id="metric-orders">128</div>
+        <div class="metric-sub">较昨日 +12%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">执行中无人机</div>
+        <div class="metric-value" id="metric-drones">6</div>
+        <div class="metric-sub">2 架待命</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">平均配送时长</div>
+        <div class="metric-value" id="metric-duration">18.6 分钟</div>
+        <div class="metric-sub">较昨日 -1.2 分钟</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">异常告警</div>
+        <div class="metric-value alert" id="metric-alerts">2</div>
+        <div class="metric-sub">1 条偏离航线</div>
+      </div>
+    </section>
+
+    <div class="screen-grid">
+      <section class="panel map-panel">
+        <div class="panel-head">
+          <span>实时地图与轨迹</span>
+          <span class="panel-badge" id="map-status-badge">地图待配置</span>
+        </div>
+        <div id="screen-map" class="screen-map"></div>
+      </section>
+
+      <div class="right-col">
+        <section class="panel video-panel">
+          <div class="panel-head">
+            <span>实时视频流</span>
+            <span class="live-chip"><i data-lucide="circle" aria-hidden="true"></i>LIVE</span>
+          </div>
+          <div class="video-wrap">
+            <canvas id="fpv-canvas" width="640" height="360"></canvas>
+            <div class="video-hud">
+              <span class="video-latency">延迟 0.2s</span>
+              <span class="video-source">CAM-FHC-201</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel device-panel">
+          <div class="panel-head">
+            <span>设备状态与告警</span>
+            <span class="panel-badge warning">2 条告警</span>
+          </div>
+          <div class="device-table-wrap">
+            <table class="device-table">
+              <thead>
+                <tr><th>无人机</th><th>电量</th><th>载重</th><th>风速</th><th>温度</th><th>湿度</th><th>状态</th></tr>
+              </thead>
+              <tbody id="device-rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <section class="panel chart-panel">
+      <div class="panel-head">
+        <span>遥测趋势</span>
+        <span class="panel-meta">最近 20 次数据更新</span>
+      </div>
+      <div id="telemetry-chart" class="telemetry-chart"></div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop hidden" id="map-config-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="map-config-title">
+      <div class="modal-head">
+        <div class="modal-title" id="map-config-title">高德地图配置</div>
+        <button class="screen-btn" data-map-config-close>关闭</button>
+      </div>
+      <div class="modal-body">
+        <form id="map-config-form">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="amap-key">高德地图 Key</label>
+              <input id="amap-key" name="amapKey" placeholder="请输入 JS API Key">
+            </div>
+            <div class="field full">
+              <label for="security-code">安全密钥 SecurityJsCode</label>
+              <input id="security-code" name="securityCode" placeholder="请输入安全密钥">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="screen-btn primary" type="submit">
+              <i data-lucide="save" aria-hidden="true"></i>保存配置
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.446.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="map.js"></script>
+  <script src="screen.js"></script>
+</body>
+</html>
