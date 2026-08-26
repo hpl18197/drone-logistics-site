@@ -435,7 +435,25 @@ button {
 
 .telemetry-chart {
   width: 100%;
-  height: 240px;
+  height: 320px;
+}
+
+.lower-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.three-view {
+  width: 100%;
+  height: 320px;
+  overflow: hidden;
+}
+
+.three-view canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .modal-backdrop {
@@ -539,6 +557,10 @@ button {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto;
   }
+
+  .lower-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 820px) {
@@ -557,6 +579,11 @@ button {
 
   .right-col {
     grid-template-columns: 1fr;
+  }
+
+  .three-view,
+  .telemetry-chart {
+    height: 280px;
   }
 }
 
