@@ -93,13 +93,23 @@
       </div>
     </div>
 
-    <section class="panel chart-panel">
-      <div class="panel-head">
-        <span>遥测趋势</span>
-        <span class="panel-meta">最近 20 次数据更新</span>
-      </div>
-      <div id="telemetry-chart" class="telemetry-chart"></div>
-    </section>
+    <div class="lower-grid">
+      <section class="panel twin-panel">
+        <div class="panel-head">
+          <span>3D 数字孪生</span>
+          <span class="panel-badge" id="three-status">Three.js / WebGL</span>
+        </div>
+        <div id="three-view" class="three-view"></div>
+      </section>
+
+      <section class="panel chart-panel">
+        <div class="panel-head">
+          <span>遥测趋势</span>
+          <span class="panel-meta">最近 20 次数据更新</span>
+        </div>
+        <div id="telemetry-chart" class="telemetry-chart"></div>
+      </section>
+    </div>
   </main>
 
   <div class="modal-backdrop hidden" id="map-config-modal">
@@ -132,6 +142,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.446.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
   <script src="map.js"></script>
   <script src="screen.js"></script>
 </body>
