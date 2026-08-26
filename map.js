@@ -221,6 +221,11 @@ window.MapHelper = {
   getConfig: getAmapConfig,
   saveConfig: saveAmapConfig,
   statusText: mapStatusText,
+  loadAmap,
   renderMap,
-  destroyMap: destroyAmapMap
+  destroyMap: destroyAmapMap,
+  positions: {
+    warehouse: WAREHOUSE_POSITION,
+    destination: DESTINATION_POSITION
+  }
 };
