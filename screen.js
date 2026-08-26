@@ -30,11 +30,21 @@ const FALLBACK_ROUTES = [
   'M120 440 C280 420, 470 280, 680 180'
 ];
 
+const PAD_POSITIONS = [
+  { x: 2.6, z: 2.6 },
+  { x: 2.6, z: -2.6 },
+  { x: 0, z: 4.1 },
+  { x: -2.6, z: 2.6 },
+  { x: 0, z: -4.1 },
+  { x: -2.6, z: -2.6 }
+];
+
 let map = null;
 let mapMarkers = [];
 let fallbackPaths = [];
 let fallbackMarkers = [];
 let chart = null;
+let threeState = null;
 const telemetry = { battery: [], wind: [], humidity: [] };
 
 function nowClock() {
@@ -368,6 +378,165 @@ function drawFpv(t) {
   requestAnimationFrame(drawFpv);
 }
 
+function initThree() {
+  const container = document.getElementById('three-view');
+  const statusEl = document.getElementById('three-status');
+  if (!container || !statusEl || !window.THREE) {
+    if (statusEl) statusEl.textContent = 'Three.js 未加载';
+    return;
+  }
+  try {
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0d171f);
+    const camera = new THREE.PerspectiveCamera(46, container.clientWidth / container.clientHeight, 0.1, 200);
+    camera.position.set(13, 10, 13);
+    camera.lookAt(0, 0.6, 0);
+
+    scene.add(new THREE.AmbientLight(0x9fc3d3, 0.9));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.3);
+    sun.position.set(8, 14, 6);
+    scene.add(sun);
+
+    const grid = new THREE.GridHelper(24, 24, 0x2cc5c2, 0x1a3342);
+    grid.position.y = 0.01;
+    scene.add(grid);
+
+    const warehouse = new THREE.Mesh(
+      new THREE.BoxGeometry(2.4, 1.5, 2),
+      new THREE.MeshStandardMaterial({ color: 0x2f8f8f, roughness: 0.55 })
+    );
+    warehouse.position.set(-3.4, 0.75, 0);
+    warehouse.castShadow = true;
+    scene.add(warehouse);
+
+    const roofBeacon = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.18, 0.12, 16),
+      new THREE.MeshBasicMaterial({ color: 0xf4b45c })
+    );
+    roofBeacon.position.set(-3.4, 1.62, 0);
+    scene.add(roofBeacon);
+
+    const fence = new THREE.Mesh(
+      new THREE.RingGeometry(6.8, 6.95, 64),
+      new THREE.MeshBasicMaterial({ color: 0xf4b45c, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+    );
+    fence.rotation.x = -Math.PI / 2;
+    fence.position.y = 0.02;
+    scene.add(fence);
+
+    PAD_POSITIONS.forEach((pos) => {
+      const pad = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.62, 0.72, 0.08, 24),
+        new THREE.MeshStandardMaterial({ color: 0x9b8cff, roughness: 0.8 })
+      );
+      pad.position.set(pos.x, 0.04, pos.z);
+      scene.add(pad);
+    });
+
+    const droneEntries = DRONES.map((d, i) => {
+      const group = new THREE.Group();
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(0.52, 0.14, 0.52),
+        new THREE.MeshStandardMaterial({ color: 0x2cc5c2, roughness: 0.45 })
+      );
+      body.position.y = 0.08;
+      const rotorGroup = new THREE.Group();
+      const rotorMat = new THREE.MeshBasicMaterial({ color: 0xbfe9e6, transparent: true, opacity: 0.8 });
+      const positions = [
+        [0.34, 0.34],
+        [0.34, -0.34],
+        [-0.34, 0.34],
+        [-0.34, -0.34]
+      ];
+      positions.forEach(([px, pz]) => {
+        const arm = new THREE.Mesh(
+          new THREE.BoxGeometry(0.08, 0.03, 0.42),
+          new THREE.MeshStandardMaterial({ color: 0x173742 })
+        );
+        arm.position.set(px * 0.55, 0.18, pz * 0.55);
+        arm.rotation.y = Math.atan2(px, pz);
+        rotorGroup.add(arm);
+        const rotor = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.2, 0.2, 0.02, 16),
+          rotorMat
+        );
+        rotor.rotation.x = Math.PI / 2;
+        rotor.position.set(px, 0.24, pz);
+        rotorGroup.add(rotor);
+      });
+      group.add(body, rotorGroup);
+      group.position.set(-3.4, 1.25, 0);
+      scene.add(group);
+      return { group, rotorGroup, data: d };
+    });
+
+    DRONES.forEach((d, i) => {
+      const dest = PAD_POSITIONS[i % PAD_POSITIONS.length];
+      const points = [
+        new THREE.Vector3(-3.4, 0.55, 0),
+        new THREE.Vector3(dest.x, 0.55, dest.z)
+      ];
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      scene.add(new THREE.Line(
+        geometry,
+        new THREE.LineBasicMaterial({ color: 0x2cc5c2, transparent: true, opacity: 0.3 })
+      ));
+    });
+
+    threeState = {
+      renderer,
+      scene,
+      camera,
+      drones: droneEntries,
+      clock: new THREE.Clock()
+    };
+    statusEl.textContent = 'Three.js / WebGL 已启用';
+    animateThree();
+  } catch (err) {
+    statusEl.textContent = 'WebGL 不可用';
+  }
+}
+
+function updateThreeDrones() {
+  if (!threeState) return;
+  const elapsed = threeState.clock.getElapsedTime();
+  threeState.drones.forEach((entry, i) => {
+    const dest = PAD_POSITIONS[i % PAD_POSITIONS.length];
+    const progress = entry.data.progress;
+    entry.group.position.x = lerp(-3.4, dest.x, progress);
+    entry.group.position.z = lerp(0, dest.z, progress);
+    entry.group.position.y = 1.25 + Math.sin(elapsed * 1.8 + i) * 0.06;
+    entry.group.rotation.y = Math.atan2(dest.x + 3.4, dest.z);
+    entry.rotorGroup.rotation.y += 0.32;
+  });
+}
+
+function animateThree() {
+  if (!threeState) return;
+  requestAnimationFrame(animateThree);
+  updateThreeDrones();
+  const elapsed = threeState.clock.getElapsedTime();
+  threeState.camera.position.x = 13 * Math.cos(elapsed * 0.045);
+  threeState.camera.position.z = 13 * Math.sin(elapsed * 0.045);
+  threeState.camera.lookAt(0, 0.7, 0);
+  threeState.renderer.render(threeState.scene, threeState.camera);
+}
+
+function resizeThree() {
+  if (!threeState) return;
+  const container = document.getElementById('three-view');
+  if (!container || container.clientWidth === 0) return;
+  threeState.renderer.setSize(container.clientWidth, container.clientHeight);
+  threeState.camera.aspect = container.clientWidth / container.clientHeight;
+  threeState.camera.updateProjectionMatrix();
+}
+
 function initFullscreen() {
   document.getElementById('fullscreen-btn').addEventListener('click', () => {
     if (document.fullscreenElement) {
@@ -384,6 +553,7 @@ renderDevices();
 updateMetrics();
 initChart();
 initScreenMap();
+initThree();
 requestAnimationFrame(drawFpv);
 if (window.lucide) window.lucide.createIcons();
 
@@ -397,4 +567,5 @@ setInterval(() => {
 
 window.addEventListener('resize', () => {
   if (chart) chart.resize();
+  resizeThree();
 });
