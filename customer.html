@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>蜂翼智飞 · 客户配送中心</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark"><i data-lucide="plane"></i></span>
+      <div>
+        <div class="brand-name">蜂翼智飞</div>
+        <div class="brand-sub">客户配送中心</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn header-btn" data-map-config-open>
+        <i data-lucide="map"></i>地图配置
+      </button>
+      <span class="header-status">系统在线</span>
+    </div>
+  </header>
+
+  <main class="main-wrap">
+    <h1 class="page-title">无人机配送</h1>
+    <p class="page-sub">提交订单后由工作人员调度无人机完成配送</p>
+
+    <div class="customer-grid">
+      <section class="panel">
+        <div class="panel-head"><span>新建订单</span></div>
+        <div class="panel-body">
+          <form id="order-form">
+            <div class="form-grid">
+              <div class="field">
+                <label>收货人</label>
+                <input name="customer" maxlength="30" placeholder="收货单位或个人">
+              </div>
+              <div class="field">
+                <label>联系电话</label>
+                <input name="phone" maxlength="20" placeholder="手机或座机">
+              </div>
+              <div class="field full">
+                <label>收货地址</label>
+                <input name="address" maxlength="80" placeholder="省市区街道门牌">
+              </div>
+              <div class="field">
+                <label>配送距离 (km)</label>
+                <input name="distance" type="number" min="0.5" max="60" step="0.1" value="10">
+              </div>
+              <div class="field">
+                <label>货物重量 (kg)</label>
+                <input name="weight" type="number" min="0.1" max="32" step="0.1" value="5">
+              </div>
+              <div class="field">
+                <label>货物类型</label>
+                <select name="cargoType">
+                  <option>医疗物资</option>
+                  <option>生鲜食材</option>
+                  <option>工业零件</option>
+                  <option selected>普通包裹</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>优先级</label>
+                <select name="priority">
+                  <option selected>普通</option>
+                  <option>加急</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn primary" type="submit">
+                <i data-lucide="send"></i>提交订单
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <span>我的订单</span>
+          <span class="badge teal" id="order-count">0</span>
+        </div>
+        <div class="order-list" id="order-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="modal-backdrop hidden" id="track-modal">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title" id="track-title">配送跟踪</div>
+        <button class="btn" id="close-modal">关闭</button>
+      </div>
+      <div class="modal-body" id="track-body"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="map-config-modal">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">高德地图配置</div>
+        <button class="btn" data-map-config-close>关闭</button>
+      </div>
+      <div class="modal-body">
+        <form id="map-config-form">
+          <div class="form-grid">
+            <div class="field full">
+              <label>高德地图 Key</label>
+              <input name="amapKey" placeholder="请输入 JS API Key">
+            </div>
+            <div class="field full">
+              <label>安全密钥 SecurityJsCode</label>
+              <input name="securityCode" placeholder="请输入安全密钥">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn primary" type="submit">
+              <i data-lucide="save"></i>保存配置
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toast-wrap"></div>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.446.0/dist/umd/lucide.min.js"></script>
+  <script src="store.js"></script>
+  <script src="map.js"></script>
+  <script src="customer.js"></script>
+</body>
+</html>
