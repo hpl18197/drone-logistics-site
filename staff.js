@@ -17,6 +17,11 @@ const STATUS_CLASS = {
   '已完成': 'green'
 };
 
+function nowTime() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+}
+
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, (c) => ({
     '&': '&amp;',
@@ -32,11 +37,11 @@ function statusBadge(status) {
 }
 
 function cardAction(order) {
-  if (order.status === '待调度') return `<button class="btn" data-action="dispatch"><i data-lucide="cpu"></i>智能调度</button>`;
-  if (order.status === '待拣货') return `<button class="btn" data-action="pick"><i data-lucide="clipboard-check"></i>完成拣货</button>`;
-  if (order.status === '待起飞') return `<button class="btn" data-action="takeoff"><i data-lucide="play"></i>起飞</button>`;
-  if (order.status === '飞行中' || order.status === '待校验') return `<button class="btn" data-action="select"><i data-lucide="eye"></i>查看</button>`;
-  if (order.status === '待交付') return `<button class="btn" disabled><i data-lucide="package-check"></i>等待签收</button>`;
+  if (order.status === '待调度') return `<button class="btn" data-action="dispatch"><i data-lucide="cpu" aria-hidden="true"></i>智能调度</button>`;
+  if (order.status === '待拣货') return `<button class="btn" data-action="pick"><i data-lucide="clipboard-check" aria-hidden="true"></i>完成拣货</button>`;
+  if (order.status === '待起飞') return `<button class="btn" data-action="takeoff"><i data-lucide="play" aria-hidden="true"></i>起飞</button>`;
+  if (order.status === '飞行中' || order.status === '待校验') return `<button class="btn" data-action="select"><i data-lucide="eye" aria-hidden="true"></i>查看</button>`;
+  if (order.status === '待交付') return `<button class="btn" disabled><i data-lucide="package-check" aria-hidden="true"></i>等待签收</button>`;
   return '';
 }
 
@@ -80,7 +85,7 @@ function operationArea(order) {
         <div class="badge gray">待调度</div>
         <div class="operation-actions">
           <button class="btn primary" data-action="dispatch" data-id="${esc(order.id)}">
-            <i data-lucide="cpu"></i>智能调度
+            <i data-lucide="cpu" aria-hidden="true"></i>智能调度
           </button>
         </div>
       </div>
@@ -92,7 +97,7 @@ function operationArea(order) {
         <div class="badge blue">已生成装货清单</div>
         <div class="operation-actions">
           <button class="btn primary" data-action="pick" data-id="${esc(order.id)}">
-            <i data-lucide="clipboard-check"></i>完成拣货并绑定
+            <i data-lucide="clipboard-check" aria-hidden="true"></i>完成拣货并绑定
           </button>
         </div>
       </div>
@@ -104,7 +109,7 @@ function operationArea(order) {
         <div class="badge violet">待起飞</div>
         <div class="operation-actions">
           <button class="btn primary" data-action="takeoff" data-id="${esc(order.id)}">
-            <i data-lucide="play"></i>起飞执行
+            <i data-lucide="play" aria-hidden="true"></i>起飞执行
           </button>
         </div>
       </div>
@@ -117,7 +122,7 @@ function operationArea(order) {
         <div class="badge teal">飞行中 · 自动巡检</div>
         <div class="progress">
           <div class="progress-head"><span>飞行进度</span><strong>${progress}%</strong></div>
-          <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+          <div class="progress-track" role="progressbar" aria-label="飞行进度" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><div class="progress-fill" style="width:${progress}%"></div></div>
         </div>
       </div>
     `;
@@ -131,13 +136,13 @@ function operationArea(order) {
         <div class="badge amber">地面站二次校验</div>
         <div class="operation-actions">
           <button class="btn ${dataOk ? 'success' : ''}" data-action="check-data" data-id="${esc(order.id)}">
-            <i data-lucide="shield-check"></i>${dataOk ? '数据已核验' : '数据核验'}
+            <i data-lucide="shield-check" aria-hidden="true"></i>${dataOk ? '数据已核验' : '数据核验'}
           </button>
           <button class="btn ${visualOk ? 'success' : ''}" data-action="check-visual" data-id="${esc(order.id)}">
-            <i data-lucide="camera"></i>${visualOk ? '画面已核验' : '画面核验'}
+            <i data-lucide="camera" aria-hidden="true"></i>${visualOk ? '画面已核验' : '画面核验'}
           </button>
           <button class="btn primary" data-action="land" data-id="${esc(order.id)}" ${ready ? '' : 'disabled'}>
-            <i data-lucide="navigation"></i>允许降落
+            <i data-lucide="navigation" aria-hidden="true"></i>允许降落
           </button>
         </div>
       </div>
@@ -171,6 +176,7 @@ function renderDetail() {
   const itemsText = (order.items || []).map((item) => `${esc(item.name)} x ${item.count}`).join('、');
   detailEl.innerHTML = `
     <div class="panel-body">
+      <div class="panel-meta detail-meta" id="detail-updated">更新于 --:--:--</div>
       <div class="detail-list">
         <div class="detail-row"><span class="detail-label">订单号</span><span class="detail-value">${esc(order.id)}</span></div>
         <div class="detail-row"><span class="detail-label">客户</span><span class="detail-value">${esc(order.customer)}</span></div>
@@ -183,6 +189,7 @@ function renderDetail() {
       </div>
     </div>
     <div class="detail-map" id="detail-map"></div>
+    <div class="map-status" id="detail-map-status"></div>
     ${operationArea(order)}
   `;
   MapHelper.renderMap(document.getElementById('detail-map'), order);
@@ -191,7 +198,20 @@ function renderDetail() {
 function render() {
   renderList();
   renderDetail();
+  updateLiveLabels();
   if (window.lucide) window.lucide.createIcons();
+}
+
+function updateLiveLabels() {
+  const updated = `更新于 ${nowTime()}`;
+  const updatedEl = document.getElementById('last-updated');
+  const detailUpdatedEl = document.getElementById('detail-updated');
+  const liveEl = document.getElementById('live-status');
+  const mapStatusEl = document.getElementById('detail-map-status');
+  if (updatedEl) updatedEl.textContent = updated;
+  if (detailUpdatedEl) detailUpdatedEl.textContent = updated;
+  if (liveEl) liveEl.textContent = '实时同步';
+  if (mapStatusEl) mapStatusEl.textContent = MapHelper.statusText();
 }
 
 function toast(message) {
@@ -278,6 +298,8 @@ setInterval(() => {
   if (JSON.stringify(fresh) !== JSON.stringify(orders)) {
     orders = fresh;
     render();
+  } else {
+    updateLiveLabels();
   }
 }, 1000);
 

@@ -34,6 +34,10 @@ function saveAmapConfig(config) {
   }
 }
 
+function mapStatusText() {
+  return getAmapConfig().key ? '高德地图在线' : '未配置高德地图，当前为示意地图';
+}
+
 function mapRatio(order) {
   if (order.status === '飞行中') return Math.max(0, Math.min(1, (order.progress || 0) / 100));
   if (order.status === '待校验' || order.status === '待交付') return 1;
@@ -84,7 +88,7 @@ function loadAmap(config) {
   }
   amapLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(config.key)}`;
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(config.key)}&plugin=AMap.Scale,AMap.ToolBar`;
     script.async = true;
     script.onload = () => {
       if (window.AMap) resolve(window.AMap);
@@ -144,6 +148,8 @@ function renderMap(container, order) {
         center: WAREHOUSE_POSITION,
         resizeEnable: true
       });
+      map.addControl(new AMap.Scale());
+      map.addControl(new AMap.ToolBar({ position: 'RB' }));
       const startMarker = new AMap.Marker({
         position: WAREHOUSE_POSITION,
         title: '仓库',
@@ -214,6 +220,7 @@ document.addEventListener('submit', (e) => {
 window.MapHelper = {
   getConfig: getAmapConfig,
   saveConfig: saveAmapConfig,
+  statusText: mapStatusText,
   renderMap,
   destroyMap: destroyAmapMap
 };

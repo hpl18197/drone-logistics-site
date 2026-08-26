@@ -41,7 +41,7 @@ function esc(value) {
 
 function nowTime() {
   const d = new Date();
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
 }
 
 function customerStatus(status) {
@@ -65,8 +65,8 @@ function customerProgress(order) {
 
 function orderCard(order) {
   const action = order.status === '待交付'
-    ? `<button class="btn success" data-action="sign" data-id="${esc(order.id)}"><i data-lucide="user-check"></i>确认签收</button>`
-    : `<button class="btn" data-action="track" data-id="${esc(order.id)}"><i data-lucide="navigation"></i>查看进度</button>`;
+    ? `<button class="btn success" data-action="sign" data-id="${esc(order.id)}"><i data-lucide="user-check" aria-hidden="true"></i>确认签收</button>`
+    : `<button class="btn" data-action="track" data-id="${esc(order.id)}"><i data-lucide="navigation" aria-hidden="true"></i>查看进度</button>`;
   return `
     <div class="order-card">
       <div class="order-card-main">
@@ -120,7 +120,7 @@ function trackAction(order) {
         <div class="badge green">无人机已到达</div>
         <div class="operation-actions">
           <button class="btn success" data-action="sign" data-id="${esc(order.id)}">
-            <i data-lucide="user-check"></i>确认签收
+            <i data-lucide="user-check" aria-hidden="true"></i>确认签收
           </button>
         </div>
       </div>
@@ -150,6 +150,7 @@ function renderTrack() {
   trackTitleEl.textContent = `${order.id} 配送跟踪`;
   const progress = customerProgress(order);
   trackBodyEl.innerHTML = `
+    <div class="panel-meta" id="track-updated">更新于 --:--:--</div>
     <div class="detail-list">
       <div class="detail-row"><span class="detail-label">收货人</span><span class="detail-value">${esc(order.customer)}</span></div>
       <div class="detail-row"><span class="detail-label">收货地址</span><span class="detail-value">${esc(order.address)}</span></div>
@@ -158,10 +159,11 @@ function renderTrack() {
     </div>
     <div class="progress">
       <div class="progress-head"><span>配送进度</span><strong>${progress}%</strong></div>
-      <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+      <div class="progress-track" role="progressbar" aria-label="配送进度" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"><div class="progress-fill" style="width:${progress}%"></div></div>
     </div>
     <div class="timeline">${timelineSteps(order)}</div>
     <div id="track-map-container"></div>
+    <div class="map-status" id="map-status"></div>
     ${trackAction(order)}
   `;
   modalEl.classList.remove('hidden');
@@ -172,7 +174,20 @@ function renderTrack() {
 function render() {
   renderOrderList();
   renderTrack();
+  updateLiveLabels();
   if (window.lucide) window.lucide.createIcons();
+}
+
+function updateLiveLabels() {
+  const updated = `更新于 ${nowTime()}`;
+  const updatedEl = document.getElementById('last-updated');
+  const trackUpdatedEl = document.getElementById('track-updated');
+  const liveEl = document.getElementById('live-status');
+  const mapStatusEl = document.getElementById('map-status');
+  if (updatedEl) updatedEl.textContent = updated;
+  if (trackUpdatedEl) trackUpdatedEl.textContent = updated;
+  if (liveEl) liveEl.textContent = '实时同步';
+  if (mapStatusEl) mapStatusEl.textContent = MapHelper.statusText();
 }
 
 function toast(message) {
@@ -268,6 +283,8 @@ setInterval(() => {
   if (JSON.stringify(fresh) !== JSON.stringify(orders)) {
     orders = fresh;
     render();
+  } else {
+    updateLiveLabels();
   }
 }, 1500);
 

@@ -151,6 +151,23 @@ button {
   font-weight: 700;
 }
 
+.panel-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-meta {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-meta {
+  margin-bottom: 8px;
+}
+
 .panel-body {
   padding: 18px;
 }
@@ -578,6 +595,12 @@ button {
   margin: 14px 0 6px;
   border-radius: 8px;
   overflow: hidden;
+}
+
+.map-status {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .detail-map {

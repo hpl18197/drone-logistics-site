@@ -9,7 +9,7 @@
 <body>
   <header class="site-header">
     <div class="brand">
-      <span class="brand-mark"><i data-lucide="settings-2"></i></span>
+      <span class="brand-mark"><i data-lucide="settings-2" aria-hidden="true"></i></span>
       <div>
         <div class="brand-name">蜂翼智飞</div>
         <div class="brand-sub">工作人员端</div>
@@ -17,9 +17,9 @@
     </div>
     <div class="header-actions">
       <button class="btn header-btn" data-map-config-open>
-        <i data-lucide="map"></i>地图配置
+        <i data-lucide="map" aria-hidden="true"></i>地图配置
       </button>
-      <span class="header-status">系统在线</span>
+      <span class="header-status" id="live-status">实时同步</span>
     </div>
   </header>
 
@@ -31,7 +31,10 @@
       <section class="panel">
         <div class="panel-head">
           <span>订单列表</span>
-          <span class="badge teal" id="order-count">0</span>
+          <div class="panel-head-actions">
+            <span class="panel-meta" id="last-updated">更新于 --:--:--</span>
+            <span class="badge teal" id="order-count">0</span>
+          </div>
         </div>
         <div class="order-list" id="order-list"></div>
       </section>
@@ -44,26 +47,26 @@
   </main>
 
   <div class="modal-backdrop hidden" id="map-config-modal">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="map-config-title">
       <div class="modal-head">
-        <div class="modal-title">高德地图配置</div>
+        <div class="modal-title" id="map-config-title">高德地图配置</div>
         <button class="btn" data-map-config-close>关闭</button>
       </div>
       <div class="modal-body">
         <form id="map-config-form">
           <div class="form-grid">
             <div class="field full">
-              <label>高德地图 Key</label>
-              <input name="amapKey" placeholder="请输入 JS API Key">
+              <label for="amap-key">高德地图 Key</label>
+              <input id="amap-key" name="amapKey" placeholder="请输入 JS API Key">
             </div>
             <div class="field full">
-              <label>安全密钥 SecurityJsCode</label>
-              <input name="securityCode" placeholder="请输入安全密钥">
+              <label for="security-code">安全密钥 SecurityJsCode</label>
+              <input id="security-code" name="securityCode" placeholder="请输入安全密钥">
             </div>
           </div>
           <div class="form-actions">
             <button class="btn primary" type="submit">
-              <i data-lucide="save"></i>保存配置
+              <i data-lucide="save" aria-hidden="true"></i>保存配置
             </button>
           </div>
         </form>
@@ -71,7 +74,7 @@
     </div>
   </div>
 
-  <div class="toast-wrap" id="toast-wrap"></div>
+  <div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.446.0/dist/umd/lucide.min.js"></script>
   <script src="store.js"></script>
   <script src="map.js"></script>
