@@ -186,7 +186,7 @@ function updateLiveLabels() {
   const mapStatusEl = document.getElementById('map-status');
   if (updatedEl) updatedEl.textContent = updated;
   if (trackUpdatedEl) trackUpdatedEl.textContent = updated;
-  if (liveEl) liveEl.textContent = '实时同步';
+  if (liveEl && !liveEl.hasAttribute('data-realtime-status')) liveEl.textContent = '实时同步';
   if (mapStatusEl) mapStatusEl.textContent = MapHelper.statusText();
 }
 
@@ -210,6 +210,9 @@ function signOrder(id) {
   order.progress = 100;
   order.deliveredAt = nowTime();
   saveOrders(orders);
+  if (Realtime.isConnected()) {
+    Realtime.send({ type: 'order:update', order });
+  }
   render();
   toast(`${order.id} 签收完成`);
 }
@@ -271,6 +274,9 @@ document.getElementById('order-form').addEventListener('submit', (e) => {
   };
   orders.unshift(order);
   saveOrders(orders);
+  if (Realtime.isConnected()) {
+    Realtime.send({ type: 'order:create', order });
+  }
   currentId = order.id;
   render();
   toast(`订单 ${order.id} 已提交`);
@@ -287,6 +293,13 @@ setInterval(() => {
     updateLiveLabels();
   }
 }, 1500);
+
+Realtime.on('orders', (data) => {
+  if (!Array.isArray(data.orders)) return;
+  orders = data.orders;
+  saveOrders(orders);
+  render();
+});
 
 render();
 if (window.lucide) window.lucide.createIcons();
