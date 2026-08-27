@@ -113,6 +113,11 @@ button {
   color: var(--green);
 }
 
+.screen-pill.connected {
+  border-color: rgba(79, 214, 154, 0.45);
+  color: var(--green);
+}
+
 .screen-btn {
   display: inline-flex;
   align-items: center;
