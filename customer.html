@@ -16,10 +16,13 @@
       </div>
     </div>
     <div class="header-actions">
+      <button class="btn header-btn" data-ws-config-open>
+        <i data-lucide="radio" aria-hidden="true"></i>数据源
+      </button>
       <button class="btn header-btn" data-map-config-open>
         <i data-lucide="map" aria-hidden="true"></i>地图配置
       </button>
-      <span class="header-status" id="live-status">实时同步</span>
+      <span class="header-status" id="live-status" data-realtime-status>本地同步</span>
     </div>
   </header>
 
@@ -102,6 +105,30 @@
     </div>
   </div>
 
+  <div class="modal-backdrop hidden" id="ws-config-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ws-config-title">
+      <div class="modal-head">
+        <div class="modal-title" id="ws-config-title">WebSocket 数据源</div>
+        <button class="btn" data-ws-config-close>关闭</button>
+      </div>
+      <div class="modal-body">
+        <form id="ws-config-form">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="ws-url">WebSocket 地址</label>
+              <input id="ws-url" name="wsUrl" placeholder="ws://localhost:8080">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn primary" type="submit">
+              <i data-lucide="save" aria-hidden="true"></i>保存并连接
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop hidden" id="map-config-modal">
     <div class="modal">
       <div class="modal-head">
@@ -133,6 +160,7 @@
   <div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.446.0/dist/umd/lucide.min.js"></script>
   <script src="store.js"></script>
+  <script src="realtime.js"></script>
   <script src="map.js"></script>
   <script src="customer.js"></script>
 </body>
