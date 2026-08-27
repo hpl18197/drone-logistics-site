@@ -45,6 +45,7 @@ let fallbackPaths = [];
 let fallbackMarkers = [];
 let chart = null;
 let threeState = null;
+let metricsLocked = false;
 const telemetry = { battery: [], wind: [], humidity: [] };
 
 function nowClock() {
@@ -62,6 +63,10 @@ function lerp(a, b, t) {
 }
 
 function positionAt(index, progress) {
+  const drone = DRONES[index];
+  if (drone && Number.isFinite(drone.lng) && Number.isFinite(drone.lat)) {
+    return [drone.lng, drone.lat];
+  }
   const dest = DESTINATIONS[index % DESTINATIONS.length];
   return [
     lerp(WAREHOUSE[0], dest[0], progress),
@@ -230,14 +235,16 @@ function updateAmapDrones() {
 }
 
 function updateDrones() {
-  DRONES.forEach((d, i) => {
-    d.progress += 0.006 + (i % 3) * 0.0012;
-    if (d.progress > 1) d.progress = 0.05;
-    d.battery = Math.max(18, Math.min(98, d.battery + (Math.random() - 0.5) * 0.6));
-    d.wind = Math.max(2, Math.min(12, d.wind + (Math.random() - 0.5) * 0.5));
-    d.temp = Math.round((d.temp + (Math.random() - 0.5) * 0.4) * 10) / 10;
-    d.humidity = Math.max(35, Math.min(75, d.humidity + (Math.random() - 0.5)));
-  });
+  if (!Realtime.isConnected()) {
+    DRONES.forEach((d, i) => {
+      d.progress += 0.006 + (i % 3) * 0.0012;
+      if (d.progress > 1) d.progress = 0.05;
+      d.battery = Math.max(18, Math.min(98, d.battery + (Math.random() - 0.5) * 0.6));
+      d.wind = Math.max(2, Math.min(12, d.wind + (Math.random() - 0.5) * 0.5));
+      d.temp = Math.round((d.temp + (Math.random() - 0.5) * 0.4) * 10) / 10;
+      d.humidity = Math.max(35, Math.min(75, d.humidity + (Math.random() - 0.5)));
+    });
+  }
   if (map && mapMarkers.length) updateAmapDrones();
   else updateFallbackDrones();
 }
@@ -261,12 +268,35 @@ function renderDevices() {
 }
 
 function updateMetrics() {
+  if (metricsLocked) return;
   const orders = 128 + Math.round(Math.sin(Date.now() / 9000) * 4);
   const drones = DRONES.filter((d) => d.status !== '待命').length;
   const duration = (18.6 + Math.sin(Date.now() / 7000) * 0.3).toFixed(1);
   document.getElementById('metric-orders').textContent = orders;
   document.getElementById('metric-drones').textContent = drones;
   document.getElementById('metric-duration').textContent = `${duration} 分钟`;
+}
+
+function handleRealtimeTelemetry(data) {
+  if (Array.isArray(data.drones)) {
+    data.drones.forEach((remote) => {
+      const drone = DRONES.find((d) => d.id === remote.id);
+      if (!drone) return;
+      if (Number.isFinite(remote.progress)) drone.progress = remote.progress;
+      ['battery', 'payload', 'wind', 'temp', 'humidity', 'status', 'lat', 'lng'].forEach((key) => {
+        if (remote[key] !== undefined) drone[key] = remote[key];
+      });
+    });
+  }
+  if (data.metrics) {
+    metricsLocked = true;
+    if (data.metrics.orders !== undefined) document.getElementById('metric-orders').textContent = data.metrics.orders;
+    if (data.metrics.activeDrones !== undefined) document.getElementById('metric-drones').textContent = data.metrics.activeDrones;
+    if (data.metrics.avgDuration !== undefined) document.getElementById('metric-duration').textContent = `${data.metrics.avgDuration} 分钟`;
+    if (data.metrics.alerts !== undefined) document.getElementById('metric-alerts').textContent = data.metrics.alerts;
+  }
+  renderDevices();
+  updateDrones();
 }
 
 function initChart() {
@@ -556,6 +586,8 @@ initScreenMap();
 initThree();
 requestAnimationFrame(drawFpv);
 if (window.lucide) window.lucide.createIcons();
+
+Realtime.on('telemetry', handleRealtimeTelemetry);
 
 setInterval(() => {
   updateClock();
