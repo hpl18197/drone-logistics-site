@@ -16,3 +16,17 @@
 - 安全密钥 SecurityJsCode：如果应用启用了安全密钥，填写对应的值。
 
 保存后页面会自动加载高德在线地图；未配置时使用内置示意地图。
+
+## WebSocket 实时数据
+
+页面右上角“数据源”可配置 WebSocket 地址，用于推送无人机遥测和订单数据。
+
+本地启动服务端：
+
+```bash
+cd server
+npm install
+npm start
+```
+
+服务端默认监听 `ws://localhost:8080`，页面数据源填写该地址即可连接。
