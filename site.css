@@ -106,6 +106,10 @@ button {
   background: #39c478;
 }
 
+.header-status.connected {
+  color: #9edbbd;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -677,6 +681,11 @@ button {
 @media (max-width: 560px) {
   .site-header {
     padding: 0 14px;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
   }
 
   .main-wrap {
