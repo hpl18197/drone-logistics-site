@@ -210,7 +210,7 @@ function updateLiveLabels() {
   const mapStatusEl = document.getElementById('detail-map-status');
   if (updatedEl) updatedEl.textContent = updated;
   if (detailUpdatedEl) detailUpdatedEl.textContent = updated;
-  if (liveEl) liveEl.textContent = '实时同步';
+  if (liveEl && !liveEl.hasAttribute('data-realtime-status')) liveEl.textContent = '实时同步';
   if (mapStatusEl) mapStatusEl.textContent = MapHelper.statusText();
 }
 
@@ -227,6 +227,12 @@ function toast(message) {
   }, 2400);
 }
 
+function syncOrder(order) {
+  if (Realtime.isConnected()) {
+    Realtime.send({ type: 'order:update', order });
+  }
+}
+
 function handleAction(action, id) {
   const order = orders.find((o) => o.id === id);
   if (!order) return;
@@ -239,6 +245,7 @@ function handleAction(action, id) {
   if (action === 'dispatch' && order.status === '待调度') {
     dispatchOrder(order);
     saveOrders(orders);
+    syncOrder(order);
     render();
     toast(`${order.id} 已匹配 ${order.droneModel}`);
     return;
@@ -246,6 +253,7 @@ function handleAction(action, id) {
   if (action === 'pick' && order.status === '待拣货') {
     bindDrone(order);
     saveOrders(orders);
+    syncOrder(order);
     render();
     toast(`${order.id} 已绑定 ${order.droneSerial}`);
     return;
@@ -255,6 +263,7 @@ function handleAction(action, id) {
     order.progress = 2;
     order.startedAt = Date.now();
     saveOrders(orders);
+    syncOrder(order);
     render();
     toast(`${order.id} 已起飞`);
     return;
@@ -262,18 +271,21 @@ function handleAction(action, id) {
   if (action === 'check-data' && order.status === '待校验') {
     order.checks.data = true;
     saveOrders(orders);
+    syncOrder(order);
     render();
     return;
   }
   if (action === 'check-visual' && order.status === '待校验') {
     order.checks.visual = true;
     saveOrders(orders);
+    syncOrder(order);
     render();
     return;
   }
   if (action === 'land' && order.status === '待校验' && order.checks?.data && order.checks?.visual) {
     order.status = '待交付';
     saveOrders(orders);
+    syncOrder(order);
     render();
     toast(`${order.id} 降落许可已下达`);
     return;
@@ -302,6 +314,13 @@ setInterval(() => {
     updateLiveLabels();
   }
 }, 1000);
+
+Realtime.on('orders', (data) => {
+  if (!Array.isArray(data.orders)) return;
+  orders = data.orders;
+  saveOrders(orders);
+  render();
+});
 
 render();
 if (window.lucide) window.lucide.createIcons();
